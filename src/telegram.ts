@@ -7,7 +7,9 @@ export async function sendTelegram(text: string): Promise<void> {
     console.log(text);
     return;
   }
+  let delivered = 0;
   for (const chatId of env.telegramChatIds) {
+    let ok = true;
     for (const chunk of split(text, 3800)) {
       const res = await fetch(
         `https://api.telegram.org/bot${env.telegramToken}/sendMessage`,
@@ -22,22 +24,30 @@ export async function sendTelegram(text: string): Promise<void> {
           }),
         },
       );
-      if (!res.ok) console.error(`[telegram] ${res.status}: ${await res.text()}`);
+      if (!res.ok) {
+        ok = false;
+        console.error(`[telegram] ${res.status}: ${(await res.text()).slice(0, 300)}`);
+      }
     }
+    if (ok) delivered++;
   }
+  // Throw so the caller keeps the items pending instead of marking them as sent.
+  if (!delivered) throw new Error("telegram: nenhum chat recebeu a mensagem completa");
 }
 
-function split(text: string, max: number): string[] {
-  if (text.length <= max) return [text];
+export function split(text: string, max: number): string[] {
   const out: string[] = [];
   let buf = "";
   for (const line of text.split("\n")) {
-    if (buf.length + line.length + 1 > max) {
-      out.push(buf);
-      buf = "";
+    for (let i = 0; i < Math.max(line.length, 1); i += max - 1) {
+      const piece = line.slice(i, i + max - 1);
+      if (buf && buf.length + piece.length + 1 > max) {
+        out.push(buf);
+        buf = "";
+      }
+      buf += `${piece}\n`;
     }
-    buf += `${line}\n`;
   }
-  if (buf) out.push(buf);
+  if (buf.trim()) out.push(buf);
   return out;
 }
