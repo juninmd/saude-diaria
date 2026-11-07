@@ -1,5 +1,6 @@
-// Config específica deste agente. Edite feeds/prompt à vontade.
-export const topic = {
+import { defineTopic } from "@juninmd/digest-kit";
+
+export const topic = defineTopic({
   name: "saude-diaria",
   title: "Saúde Diária",
   emoji: "🩺",
@@ -18,4 +19,4 @@ Regras do digest:
     { name: "ScienceDaily Fitness", url: "https://www.sciencedaily.com/rss/health_medicine/fitness.xml" },
     { name: "Google News Saúde", url: "https://news.google.com/rss/search?q=sa%C3%BAde%20bem-estar%20nutri%C3%A7%C3%A3o&hl=pt-BR&gl=BR&ceid=BR:pt-419" },
   ],
-};
+});
